@@ -64,6 +64,35 @@ struct AppSection<Content: View>: View {
     }
 }
 
+// MARK: - Error Mapping Utility
+
+extension AppError {
+    /// Map a URLError to a user-friendly AppError
+    static func from(_ urlError: URLError) -> AppError {
+        switch urlError.code {
+        case .notConnectedToInternet, .networkConnectionLost:
+            return .network("You appear to be offline.")
+        case .timedOut:
+            return .timeout
+        case .userAuthenticationRequired:
+            return .unauthorized
+        default:
+            return .network("A network error occurred: \(urlError.localizedDescription)")
+        }
+    }
+    
+    /// Map an HTTP status code to AppError
+    static func fromHTTPStatus(_ code: Int, message: String = "") -> AppError {
+        switch code {
+        case 401: return .unauthorized
+        case 404: return .notFound
+        case 408, 504: return .timeout
+        case 500...599: return .serverError(code, message.isEmpty ? "Internal server error" : message)
+        default: return .generic("Unexpected response (\(code))")
+        }
+    }
+}
+
 // MARK: - Haptic Feedback
 
 enum HapticManager {

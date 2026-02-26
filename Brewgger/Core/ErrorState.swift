@@ -9,23 +9,29 @@ enum AppError: LocalizedError, Equatable {
     case network(String)
     case notFound
     case unauthorized
+    case serverError(Int, String)
+    case timeout
     case generic(String)
     
     var errorDescription: String? {
         switch self {
         case .network(let msg): return msg
         case .notFound: return "Not Found"
-        case .unauthorized: return "Unauthorized"
+        case .unauthorized: return "Session Expired"
+        case .serverError(let code, let msg): return "Server Error (\(code)): \(msg)"
+        case .timeout: return "Request Timed Out"
         case .generic(let msg): return msg
         }
     }
     
     var recoverySuggestion: String? {
         switch self {
-        case .network: return "Check your connection and try again."
-        case .notFound: return "The item may have been removed."
-        case .unauthorized: return "Please sign in again."
-        case .generic: return "Please try again later."
+        case .network: return "Check your internet connection and try again."
+        case .notFound: return "This item may have been moved or deleted."
+        case .unauthorized: return "Your session has expired. Please sign in again to continue."
+        case .serverError: return "Something went wrong on our end. Please try again in a moment."
+        case .timeout: return "The request took too long. Check your connection and try again."
+        case .generic: return "Something unexpected happened. Please try again later."
         }
     }
     
@@ -34,7 +40,17 @@ enum AppError: LocalizedError, Equatable {
         case .network: return "wifi.slash"
         case .notFound: return "magnifyingglass"
         case .unauthorized: return "lock.fill"
+        case .serverError: return "server.rack"
+        case .timeout: return "clock.badge.exclamationmark"
         case .generic: return "exclamationmark.triangle.fill"
+        }
+    }
+    
+    /// Whether the user can meaningfully retry this error
+    var isRetryable: Bool {
+        switch self {
+        case .network, .serverError, .timeout: return true
+        case .notFound, .unauthorized, .generic: return false
         }
     }
 }
@@ -49,7 +65,7 @@ struct ErrorStateView: View {
         VStack(spacing: DesignTokens.Spacing.md) {
             errorIcon
             errorText
-            if let retryAction {
+            if let retryAction, error.isRetryable {
                 retryButton(action: retryAction)
             }
         }
