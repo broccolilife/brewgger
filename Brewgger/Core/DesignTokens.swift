@@ -69,6 +69,17 @@ enum DesignTokens {
         static let separator = Color(.separator)
     }
 
+    // MARK: Typography (bridge to AppTypography)
+    enum Typography {
+        static let largeTitle: Font = AppTypography.heroTitle
+        static let title: Font = AppTypography.sectionTitle
+        static let headline: Font = AppTypography.cardTitle
+        static let body: Font = AppTypography.body
+        static let callout: Font = AppTypography.secondary
+        static let caption: Font = AppTypography.caption
+        static let micro: Font = AppTypography.micro
+    }
+
     // MARK: Elevation
     enum Elevation {
         case flat, raised, floating, overlay

@@ -93,6 +93,39 @@ extension AppError {
     }
 }
 
+// MARK: - VoiceOver Announcements
+
+enum AccessibilityAnnouncements {
+    static func announce(_ message: String) {
+        UIAccessibility.post(notification: .announcement, argument: message)
+    }
+
+    static func screenChanged(_ message: String? = nil) {
+        UIAccessibility.post(notification: .screenChanged, argument: message)
+    }
+
+    static func layoutChanged(_ message: String? = nil) {
+        UIAccessibility.post(notification: .layoutChanged, argument: message)
+    }
+}
+
+// MARK: - Reduce Motion Support
+
+extension View {
+    func adaptiveAnimation<V: Equatable>(_ animation: Animation, value: V) -> some View {
+        self.animation(UIAccessibility.isReduceMotionEnabled ? .none : animation, value: value)
+    }
+
+    @ViewBuilder
+    func motionSafeTransition(_ transition: AnyTransition) -> some View {
+        if UIAccessibility.isReduceMotionEnabled {
+            self
+        } else {
+            self.transition(transition)
+        }
+    }
+}
+
 // MARK: - Haptic Feedback
 
 enum HapticManager {
