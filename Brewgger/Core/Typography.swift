@@ -1,75 +1,108 @@
-// Typography.swift — Type system for Brewgger
-// Pixel+Muse — warm, readable typography for coffee brewing
-
 import SwiftUI
 
+// MARK: - Typography System for Brewgger
+
+/// Semantic type styles with Dynamic Type support.
+/// Uses SF Serif for warmth + SF default for UI.
+
 enum AppTypography {
-    
-    // MARK: - Display
-    
-    /// Hero — brew name, recipe title
-    static let hero: Font = .system(size: 32, weight: .bold, design: .serif)
-    
-    /// Section headers — "My Brews", "Recipes"
-    static let sectionTitle: Font = .system(size: 22, weight: .semibold, design: .default)
-    
-    /// Card title — brew method name
-    static let cardTitle: Font = .system(size: 17, weight: .semibold, design: .default)
-    
-    /// Body — recipe steps, descriptions
-    static let body: Font = .system(size: 16, weight: .regular, design: .default)
-    
-    /// Secondary — metadata, notes
-    static let secondary: Font = .system(size: 14, weight: .regular, design: .default)
-    
-    /// Caption — timestamps, ratios
-    static let caption: Font = .system(size: 12, weight: .medium, design: .default)
-    
-    // MARK: - Monospaced (timers, ratios, measurements)
-    
-    /// Timer display — 3:45
-    static let timerDisplay: Font = .system(size: 56, weight: .light, design: .monospaced)
-    
-    /// Ratio/measurement — "1:16", "18g"
-    static let measurement: Font = .system(size: 20, weight: .medium, design: .monospaced)
-    
-    /// Small mono — grind size, temp readings
-    static let monoCaption: Font = .system(size: 13, weight: .regular, design: .monospaced)
+
+    // MARK: - Display & Headings (Serif for warmth)
+
+    /// Display — recipe titles, brew day headers
+    static let display = Font.system(.largeTitle, design: .serif, weight: .bold)
+
+    /// Title — screen titles
+    static let title = Font.system(.title2, design: .serif, weight: .bold)
+
+    /// Subtitle — section headers
+    static let subtitle = Font.system(.title3, design: .serif, weight: .semibold)
+
+    // MARK: - UI Text (Default for readability)
+
+    /// Headline — card titles, step names
+    static let headline = Font.system(.headline, weight: .semibold)
+
+    /// Body — descriptions, instructions
+    static let body = Font.system(.body)
+
+    /// Callout — tips, notes
+    static let callout = Font.system(.callout)
+
+    /// Caption — metadata, brew dates
+    static let caption = Font.system(.caption)
+
+    /// Micro — badges, tiny labels
+    static let micro = Font.system(.caption2, weight: .medium)
+
+    // MARK: - Specialized
+
+    /// Timer — large monospaced digits for brew timers
+    static let timer = Font.system(size: 56, weight: .light, design: .monospaced)
+
+    /// Measurement — ingredient amounts (monospaced for alignment)
+    static let measurement = Font.system(.body, design: .monospaced, weight: .medium)
+
+    /// ABV/IBU — stats display
+    static let stat = Font.system(.title, design: .rounded, weight: .bold)
+
+    // MARK: - Line Heights
+
+    static let tightLeading: CGFloat = 1.1
+    static let normalLeading: CGFloat = 1.4
+    static let relaxedLeading: CGFloat = 1.6
+
+    // MARK: - Tracking
+
+    static let tightTracking: CGFloat = -0.5
+    static let normalTracking: CGFloat = 0
+    static let wideTracking: CGFloat = 1.5
 }
 
 // MARK: - View Modifiers
 
-struct TypeStyle: ViewModifier {
-    let font: Font
-    let color: Color
-    let tracking: CGFloat
-    
-    init(_ font: Font, color: Color = .primary, tracking: CGFloat = 0) {
-        self.font = font
-        self.color = color
-        self.tracking = tracking
-    }
-    
-    func body(content: Content) -> some View {
-        content
+extension View {
+    func textStyle(_ font: Font, color: Color = DesignTokens.Colors.textPrimary) -> some View {
+        self
             .font(font)
             .foregroundStyle(color)
-            .tracking(tracking)
+    }
+
+    /// Timer display — large monospaced countdown.
+    func timerStyle() -> some View {
+        self
+            .font(AppTypography.timer)
+            .monospacedDigit()
+            .foregroundStyle(DesignTokens.Colors.timerActive)
+    }
+
+    /// Recipe title — warm serif heading.
+    func recipeTitleStyle() -> some View {
+        self
+            .font(AppTypography.display)
+            .foregroundStyle(DesignTokens.Colors.brewCopper)
+    }
+
+    /// Measurement values — aligned monospace.
+    func measurementStyle() -> some View {
+        self
+            .font(AppTypography.measurement)
+            .monospacedDigit()
     }
 }
 
-extension View {
-    func typeStyle(_ font: Font, color: Color = .primary, tracking: CGFloat = 0) -> some View {
-        modifier(TypeStyle(font, color: color, tracking: tracking))
+// MARK: - Text Convenience
+
+extension Text {
+    func captionSecondary() -> Text {
+        self
+            .font(AppTypography.caption)
+            .foregroundStyle(DesignTokens.Colors.textSecondary)
     }
-    
-    /// Timer display — large, light, monospaced
-    func timerStyle() -> some View {
-        modifier(TypeStyle(AppTypography.timerDisplay, tracking: 2))
-    }
-    
-    /// Measurement style for ratios and weights
-    func measurementStyle() -> some View {
-        modifier(TypeStyle(AppTypography.measurement, tracking: 0.5))
+
+    func statStyle() -> Text {
+        self
+            .font(AppTypography.stat)
+            .fontDesign(.rounded)
     }
 }

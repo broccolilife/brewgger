@@ -1,73 +1,92 @@
-// SpringAnimations.swift — Spring animation presets for Brewgger
-// Pixel+Muse — warm, deliberate motion for brewing UX
-
 import SwiftUI
 
-// MARK: - Spring Presets
+// MARK: - Spring Animation Presets for Brewgger
 
 enum SpringPreset {
-    
-    /// Pour animation — smooth, fluid motion
-    static let pour: Animation = .spring(response: 0.6, dampingFraction: 0.75)
-    
-    /// Timer tick — subtle pulse on each second
-    static let timerPulse: Animation = .spring(response: 0.2, dampingFraction: 0.5)
-    
-    /// Card expand — recipe detail expansion
-    static let cardExpand: Animation = .spring(response: 0.45, dampingFraction: 0.8)
-    
-    /// Button press — tactile response
-    static let buttonPress: Animation = .spring(response: 0.25, dampingFraction: 0.65)
-    
-    /// Step transition — moving between brew steps
-    static let stepTransition: Animation = .spring(response: 0.5, dampingFraction: 0.85)
-    
-    /// Bloom effect — coffee bloom animation
-    static let bloom: Animation = .spring(response: 0.8, dampingFraction: 0.6, blendDuration: 0.2)
-    
-    /// Gentle — settings toggles, subtle state changes
-    static let gentle: Animation = .spring(response: 0.55, dampingFraction: 0.9)
-    
-    /// Snappy — tab switches, quick interactions
-    static let snappy: Animation = .spring(response: 0.2, dampingFraction: 0.7)
-}
+    case snappy, bouncy, gentle, pour, bubble, timerTick
 
-// MARK: - Animated Modifiers
-
-struct SlideInFromBottom: ViewModifier {
-    @State private var appeared = false
-    let delay: Double
-    
-    init(delay: Double = 0) { self.delay = delay }
-    
-    func body(content: Content) -> some View {
-        content
-            .offset(y: appeared ? 0 : 30)
-            .opacity(appeared ? 1 : 0)
-            .onAppear {
-                withAnimation(SpringPreset.stepTransition.delay(delay)) {
-                    appeared = true
-                }
-            }
+    var animation: Animation {
+        switch self {
+        case .snappy:    return .spring(response: 0.2, dampingFraction: 0.7)
+        case .bouncy:    return .bouncy(duration: 0.5, extraBounce: 0.25)
+        case .gentle:    return .spring(response: 0.55, dampingFraction: 0.9)
+        case .pour:      return .easeIn(duration: 1.2)
+        case .bubble:    return .spring(response: 0.8, dampingFraction: 0.5)
+        case .timerTick: return .spring(response: 0.15, dampingFraction: 0.6)
+        }
     }
 }
 
-struct PressableStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1)
-            .animation(SpringPreset.buttonPress, value: configuration.isPressed)
-    }
-}
-
-// MARK: - View Extensions
+// MARK: - Brew-Specific Spring Modifiers
 
 extension View {
-    func slideInFromBottom(delay: Double = 0) -> some View {
-        modifier(SlideInFromBottom(delay: delay))
+    /// Generic spring scale toggle.
+    func springScale(isActive: Bool, preset: SpringPreset = .bouncy, activeScale: CGFloat = 1.1) -> some View {
+        self
+            .scaleEffect(isActive ? activeScale : 1.0)
+            .animation(preset.animation, value: isActive)
     }
-    
-    func pressable() -> some View {
-        buttonStyle(PressableStyle())
+
+    /// Timer completion pulse — quick bounce on brew step done.
+    func timerPulse(trigger: Bool) -> some View {
+        self
+            .scaleEffect(trigger ? 1.15 : 1.0)
+            .animation(SpringPreset.timerTick.animation, value: trigger)
+    }
+
+    /// Pour fill animation — opacity rising from bottom.
+    func pourFillEffect(progress: CGFloat) -> some View {
+        self
+            .opacity(Double(progress))
+            .scaleEffect(y: progress, anchor: .bottom)
+            .animation(SpringPreset.pour.animation, value: progress)
+    }
+
+    /// Bubble float — gently rising element.
+    func bubbleFloat(isActive: Bool, offset: CGFloat = -20) -> some View {
+        self
+            .offset(y: isActive ? offset : 0)
+            .opacity(isActive ? 0.0 : 1.0)
+            .animation(SpringPreset.bubble.animation, value: isActive)
+    }
+
+    /// Recipe card entrance — slide in from trailing with spring.
+    func cardEntrance(isVisible: Bool, delay: Double = 0) -> some View {
+        self
+            .offset(x: isVisible ? 0 : 60)
+            .opacity(isVisible ? 1.0 : 0.0)
+            .animation(
+                SpringPreset.gentle.animation.delay(delay),
+                value: isVisible
+            )
+    }
+
+    /// Ingredient check-off — shrink and fade.
+    func ingredientCheckOff(isChecked: Bool) -> some View {
+        self
+            .scaleEffect(isChecked ? 0.95 : 1.0)
+            .opacity(isChecked ? 0.5 : 1.0)
+            .animation(SpringPreset.snappy.animation, value: isChecked)
+    }
+}
+
+// MARK: - Transitions
+
+extension AnyTransition {
+    static var springPopIn: AnyTransition {
+        .scale(scale: 0.5)
+        .combined(with: .opacity)
+    }
+
+    static var slideUpSpring: AnyTransition {
+        .move(edge: .bottom)
+        .combined(with: .opacity)
+    }
+
+    static var pourReveal: AnyTransition {
+        .asymmetric(
+            insertion: .scale(scale: 0.8, anchor: .bottom).combined(with: .opacity),
+            removal: .opacity
+        )
     }
 }
